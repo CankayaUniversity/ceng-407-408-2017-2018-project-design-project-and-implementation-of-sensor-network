@@ -1,0 +1,167 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.IO.Ports;
+using System.IO;
+namespace OtoparkCokluOkuma
+{
+    public partial class Form1 : Form
+    {
+        string[] ports = SerialPort.GetPortNames(); //Port Numaralarýný ports isimli diziye atýyoruz.
+        int veri;
+        bool value,value2;
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            foreach (string port in ports)
+            {
+                comboBox1.Items.Add(port); // Port isimlerini combobox1'de gösteriyoruz.
+                comboBox1.SelectedIndex = 0;
+            }
+
+
+            label2.Text = "Baðlantý Kapalý";   //Bu esnada baðlantý yok. }
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (serialPort1.IsOpen == true)
+            {
+                serialPort1.Close();
+            }
+        }
+        int temp,temp2;
+
+        
+
+      
+        private void button2_Click(object sender, EventArgs e)
+        {
+            //BAÐLANTIYI KES BUTONU
+            timer1.Stop();
+            if (serialPort1.IsOpen == true)
+            {
+                serialPort1.Close();
+                label2.ForeColor = Color.Red;
+                label2.Text = "Baðlantý Kapalý";
+            }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            timer1.Start(); //250 ms olarak ayarlandý timer'ý.
+            if (serialPort1.IsOpen == false)
+            {
+                if (comboBox1.Text == "")
+                    return;
+                serialPort1.PortName = comboBox1.Text;  // combobox1'e zaten port isimlerini aktarmýþtýk.
+                serialPort1.BaudRate = 9600; //Seri Haberleþme baudrate'i combobox2 'de seçilene göre belirliyoruz.
+                try
+                {
+                    serialPort1.Open(); //Haberleþme için port açýlýyor
+                    label2.ForeColor = Color.Green;
+                    label2.Text = "Baðlantý Açýk";
+
+
+                }
+                catch (Exception hata)
+                {
+                    MessageBox.Show("Hata:" + hata.Message);
+                }
+            }
+            else
+            {
+                label2.Text = "Baðlantý kurulu !!!";
+            }
+        }
+
+        private void refreshButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void timer1_Tick_1(object sender, EventArgs e)
+        {
+            try
+            {
+                serialPort1.DiscardInBuffer();
+                string sonuc = serialPort1.ReadLine();//Serial.print kodu ile gelen analog veriyi alýyoruz,string formatýnda sonuc'a atýyoruz
+                string[] ldr = sonuc.Split('*');
+                label1.Text = sonuc + "";
+
+                veri = Int32.Parse(ldr[0]);
+                temp = 660;
+                if (veri <= temp)
+                {
+                    value = false;
+                    textBox1.BackColor = Color.Red;
+                    textBox1.Text = "DOLU";
+                }
+                else if (veri >= temp)
+                {
+                    value = true;
+                    textBox1.BackColor = Color.Green;
+                    textBox1.Text = "BOÞ";
+                    
+                }
+                //ÝKÝNCÝ DEVRE KONTROL KISMI
+                veri = Int32.Parse(ldr[1]);
+                temp2 = 660;
+                if (veri <= temp)
+                {
+                    value2 = false;
+                    textBox2.BackColor = Color.Red;
+                    textBox2.Text = "DOLU";
+                }
+                else if (veri >= temp)
+                {
+                    value2 = true;
+                    textBox2.BackColor = Color.Green;
+
+                    textBox2.Text = "BOÞ";
+                    
+                }
+                label3.Text = value.ToString();
+                // Array.Clear(subStrings, 0, subStrings.Length);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message); // basarýsýz olursa hata verecek.
+                timer1.Stop();
+            }
+
+        }
+
+        private void label5_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            comboBox1.Text = comboBox1.SelectedItem.ToString();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            listBox1.Items.Add(label1.Text); //Okunan veri listbox'a atýlýyor
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            listBox1.Items.Clear(); // listbox temizleniyor.
+        }
+
+
+    }
+}
